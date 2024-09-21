@@ -106,7 +106,7 @@ const Home = () => {
       }
     }
   
-    pdf.save("items.pdf");
+    pdf.save('report.pdf');
     toast("PDF exported successfully");
   };
   
