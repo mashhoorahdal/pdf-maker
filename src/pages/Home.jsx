@@ -188,7 +188,7 @@ const Home = () => {
       <Button
         variant="outline"
         onClick={handleExportPDF}
-        className="fixed bottom-4 right-4 z-10 bg-slate-600 hover:bg-green-600"
+        className="fixed bottom-4 right-4 z-10 bg-green-400 hover:bg-green-500 " 
       >
         Export as PDF
       </Button>
