@@ -15,25 +15,26 @@ import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 
 const Home = () => {
-  const [data, setData] = useState({ url: '',text:'', screenshot: null });
+  const [data, setData] = useState({ url: '', text: '', screenshots: [] });
   const [items, setItems] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
 
   const handleInputChange = (e) => {
     const { id, value, files } = e.target;
-    if (id === "screenshot") {
-      if (files[0] && files[0].type.startsWith("image/")) {
-        setData((prev) => ({ ...prev, [id]: files[0] }));
+    if (id === "screenshots") {
+      const validFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+      if (validFiles.length) {
+        setData(prev => ({ ...prev, screenshots: [...prev.screenshots, ...validFiles] }));
       } else {
-        toast.error("Please select an image file.");
+        toast.error("Please select image files.");
       }
     } else {
-      setData((prev) => ({ ...prev, [id]: value }));
+      setData(prev => ({ ...prev, [id]: value }));
     }
   };
 
   const handleSubmit = () => {
-    if (data.url && data.screenshot) {
+    if (data.url && data.screenshots.length) {
       if (editIndex !== null) {
         const updatedItems = items.map((item, index) =>
           index === editIndex ? data : item
@@ -42,54 +43,71 @@ const Home = () => {
         toast(`${data.url} updated successfully`);
       } else {
         toast(`${data.url} added successfully`);
-        setItems((prev) => [...prev, data]);
+        setItems(prev => [...prev, data]);
       }
-      setData({ url: '', screenshot: null }); 
-      setEditIndex(null); 
+      setData({ url: '', screenshots: [] });
+      setEditIndex(null);
     } else {
       toast.error("Please fill in all fields.");
     }
   };
 
   const handleDelete = (index) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
+    setItems(prev => prev.filter((_, i) => i !== index));
     toast("Item deleted successfully");
   };
 
   const handleEdit = (index) => {
     setEditIndex(index);
-    setData(items[index]); // Populate input fields for editing
+    setData(items[index]);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const pdf = new jsPDF();
     pdf.setFont("Arial");
   
-    items.forEach((item, index) => {
-      const imgData = URL.createObjectURL(item.screenshot);
-      const img = new Image();
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
   
-      img.src = imgData;
-      img.onload = () => {
-        const imgWidth = img.width * 0.75; 
-        const imgHeight = img.height * 0.75; 
-        
-        const maxWidth = 180; 
-        const maxHeight = 100; 
-        
-        const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
-        const finalWidth = imgWidth * ratio;
-        const finalHeight = imgHeight * ratio;
+      pdf.setFontSize(16);
+      pdf.text(`URL ${index + 1}: ${item.url}`, 10, 10 + index * 70);
+      pdf.setFontSize(12);
   
-        pdf.text(`Item ${index + 1}: ${item.url}`, 10, 10 + index * (finalHeight + 20));
-        pdf.addImage(imgData, 'JPEG', 10, 15 + index * (finalHeight + 20), finalWidth, finalHeight);
+      const promises = item.screenshots.map((screenshot, imgIndex) => {
+        return new Promise((resolve) => {
+          const imgData = URL.createObjectURL(screenshot);
+          const img = new Image();
   
-        if (index === items.length - 1) {
-          pdf.save("items.pdf");
-          toast("PDF exported successfully");
-        }
-      };
-    });
+          img.src = imgData;
+          img.onload = () => {
+            const imgWidth = img.width * 0.75;
+            const imgHeight = img.height * 0.75;
+            const maxWidth = 180;
+            const maxHeight = 100;
+            const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+            const finalWidth = imgWidth * ratio;
+            const finalHeight = imgHeight * ratio;
+  
+            const yPos = 20 + (imgIndex * (finalHeight + 10)) + index * 70;
+  
+            pdf.addImage(imgData, 'JPEG', 10, yPos, finalWidth, finalHeight);
+            resolve();
+          };
+        });
+      });
+  
+      await Promise.all(promises);
+  
+      const lastImageHeight = item.screenshots.length > 0 ? 20 + ((item.screenshots.length - 1) * (100 + 10)) + index * 70 : 0;
+      pdf.line(10, lastImageHeight + 10, 200, lastImageHeight + 10);
+  
+      if (index < items.length - 1) {
+        pdf.addPage();
+      }
+    }
+  
+    pdf.save("items.pdf");
+    toast("PDF exported successfully");
   };
   
 
@@ -99,16 +117,16 @@ const Home = () => {
 
   return (
     <>
-    <h1 className="font-bold text-center mt-5 ">URL TRACKER TOOL</h1>
+      <h1 className="font-bold text-center mt-5">URL TRACKER TOOL</h1>
       <div className="md:mt-10 md:ml-20 justify-center p-3">
-        <Card> 
+        <Card>
           <CardHeader>
             <CardTitle>{editIndex !== null ? "Edit Item" : "Add Item"}</CardTitle>
-            <CardDescription>Add the url and screenshot</CardDescription>
+            <CardDescription>Add the URL and screenshots</CardDescription>
           </CardHeader>
           <CardContent>
             <div>
-              <Label htmlFor="url">Type the url</Label>
+              <Label htmlFor="url">Type the URL</Label>
               <Input
                 onChange={handleInputChange}
                 id="url"
@@ -117,12 +135,13 @@ const Home = () => {
                 value={data.url}
                 className="mb-3"
               />
-              <Label htmlFor="screenshot">Upload Screenshot</Label>
+              <Label htmlFor="screenshots">Upload Screenshots</Label>
               <Input
                 onChange={handleInputChange}
-                id="screenshot"
+                id="screenshots"
                 type="file"
                 accept="image/*"
+                multiple
               />
             </div>
           </CardContent>
@@ -142,13 +161,14 @@ const Home = () => {
                 <CardTitle>{item.url}</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow">
-                {item.screenshot && (
+                {item.screenshots.map((screenshot, idx) => (
                   <img
-                    src={URL.createObjectURL(item.screenshot)}
+                    key={idx}
+                    src={URL.createObjectURL(screenshot)}
                     alt="Screenshot"
-                    className="w-full h-auto"
+                    className="w-full h-auto mb-2"
                   />
-                )}
+                ))}
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => handleEdit(key)}>
