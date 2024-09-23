@@ -98,8 +98,8 @@ const Home = () => {
   
       await Promise.all(promises);
   
-      const lastImageHeight = item.screenshots.length > 0 ? 20 + ((item.screenshots.length - 1) * (100 + 10)) + index * 70 : 0;
-      pdf.line(10, lastImageHeight + 10, 200, lastImageHeight + 10);
+      // const lastImageHeight = item.screenshots.length > 0 ? 20 + ((item.screenshots.length - 1) * (100 + 10)) + index * 70 : 0;
+      // pdf.line(10, lastImageHeight + 10, 200, lastImageHeight + 10);
   
       if (index < items.length - 1) {
         pdf.addPage();
@@ -153,12 +153,13 @@ const Home = () => {
         </Card>
       </div>
       <Toaster />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 ml-3 mr-3 p-3">
+        
         {items.length > 0 &&
           items.map((item, key) => (
             <Card key={key} className="flex flex-col">
               <CardHeader>
-                <CardTitle>{item.url}</CardTitle>
+                <CardTitle>URL: {item.url}</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow">
                 {item.screenshots.map((screenshot, idx) => (
@@ -166,7 +167,7 @@ const Home = () => {
                     key={idx}
                     src={URL.createObjectURL(screenshot)}
                     alt="Screenshot"
-                    className="w-full h-auto mb-2"
+                    className="w-full h-auto mb-2 border rounded"
                   />
                 ))}
               </CardContent>
