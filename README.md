@@ -1,6 +1,6 @@
 # Simple PDF Maker Tool
 
-![PDF Maker Tool](public/tools.svg)
+<img src="public/tools.svg" alt="URL Tracker Tool" width="100" />
 A lightweight and user-friendly tool for QA developers to create well-structured PDF documents easily. This tool is especially beneficial for scraping platforms that require documentation or reports generated from scraped data.
 
 ## Live Preview
