@@ -214,7 +214,7 @@ const Home = () => {
         {/* Export Button */}
         <Button
           onClick={handleExportPDF}
-          className="fixed bottom-6 right-6 z-10 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2 animate-bounce"
+          className={`fixed bottom-6 right-6 z-10 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2 ${items.length > 0 ? 'hover:scale-105' : 'opacity-75'}`}
           disabled={!items.length}
         >
           <div className="relative">
